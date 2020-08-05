@@ -25,8 +25,7 @@ urban_rural       <- here("data", "UN_Total_Urban_Rural_2018.csv") %>% read_csv
 
 #Check for missingness
 oxford_data_missing <- oxford_data %>% 
-    filter_at(
-        vars(contains("_") & !contains("Flag")), 
+    filter_at(vars(contains("_") & !contains("Flag")), 
         any_vars(!is.na(.))) %>%
     mutate(marker = 1) %>%
     pivot_wider(names_from = Date,
@@ -175,6 +174,9 @@ policy_data %>%
 
 policy_data[[2]] %>% 
     mutate(data = map(data, arrange, date),
+           # missingness at the tails are replaced by the last or the next 
+           # non-missing values; missingness not at the tails are replaced
+           # based on linear interpolation.
            data = map(data, mutate, 
                       policy_value = imputeTS::na_interpolation(policy_value))) %>% 
     bind_rows(policy_data[[1]]) %>% 
@@ -215,15 +217,7 @@ policy_data %>%
                                      1),
            policy_value_lo = if_else(policy_value > 0,
                                      1,
-                                     0))-> policy_data
-
-# policy_data %>% 
-#     ggplot(., aes(x = date, 
-#                   y = policy_value, 
-#                   group = cnt))+
-#     geom_line() +
-#     geom_point() +
-#     facet_wrap(~policy_name, scale = "free")
+                                     0)) -> policy_data
 
 # Build other data sets
 rt_estimates %<>% 
@@ -306,9 +300,9 @@ policy_data %>%
     pivot_wider(names_from = policy_name, values_from = policy_value) %>%
     left_join(rt_estimates %>% 
                   dplyr::select(-c(X, country)),
-              by = c("cnt", "date")) %>% 
+              by = c("cnt", "date"))  %>%
     mutate_at(vars(policy_dic$policy_code),
-              ~zoo::na.locf(.) %>% round) %>% # filter(cnt == "HRV") %>% View()
+              ~zoo::na.locf(.) %>% round) %>% #
     mutate_at(vars(C1, C2, C6, H2),
               ~factor(., ordered = T, levels = 0:3)) %>%
     mutate_at(vars(C4, C8),
