@@ -1,7 +1,8 @@
 rm(list=ls())
 
 # packages and functions
-pacman::p_load(tidyverse, 
+pacman::p_load(tidyverse,
+               here, 
                plm, 
                countrycode, 
                magrittr, 
@@ -16,11 +17,11 @@ pacman::p_load(tidyverse,
 root_path <- here::here()
 
 # Load data
-oxford_data       <- file.path(root_path, "data", "oxford_data_2020-07-05.csv") %>% read.csv(as.is = TRUE)
-rt_estimates      <- file.path(root_path, "data", "rt_estimates_2020-07-05.csv") %>% read.csv 
-UN_household      <- file.path(root_path, "data", "un_data_comp_size.rds") %>% readRDS %>% as_tibble
-covid19_pkg_data  <- file.path(root_path, "data", "covid19_pkd_data_20200422.rds") %>% readRDS
-urban_rural       <- file.path(root_path, "data", "UN_Total_Urban_Rural_2018.csv") %>% read_csv
+oxford_data       <- here("data","oxford_data_2020-07-05.csv") %>% read.csv(as.is = TRUE)
+rt_estimates      <- here("data","rt_estimates_2020-07-05.csv") %>% read.csv 
+UN_household      <- here("data", "un_data_comp_size.rds") %>% readRDS %>% as_tibble
+covid19_pkg_data  <- here("data", "covid19_pkd_data_20200422.rds") %>% readRDS
+urban_rural       <- here("data", "UN_Total_Urban_Rural_2018.csv") %>% read_csv
 
 #Check for missingness
 oxford_data_missing <- oxford_data %>% 
@@ -46,7 +47,7 @@ oxford_data_missing %>%
           axis.title = element_text(size = 26)) +
     geom_vline(xintercept = as.Date("2020-06-22"))
 
-if(save_data) file.path(root_path, "figs", "fig_missing.png") %>%
+here("figs", "fig_missing.png") %>%
     ggsave(width = 20, height = 10)
 
 # Build stringency_data from oxford_data
@@ -348,4 +349,4 @@ joined_data_cov <- covariates %>%
 saveRDS(list(hi = joined_hi, lo = joined_lo, mid = joined_mid,
         hi_cov = joined_hi_cov, lo_cov = joined_lo_cov, mid_cov = joined_mid_cov,
              stringency = stringency, policy_dic = policy_dic), 
-    file.path(root_path, "data", "joined_all.RDS"))
+    here("data", "joined_all.RDS"))

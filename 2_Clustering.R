@@ -1,4 +1,4 @@
-if(!exists("joined")) joined <- file.path(root_path, "v2", "joined_all.RDS") %>% readRDS
+if(!exists("joined")) joined <- here("v2", "joined_all.RDS") %>% readRDS
 # if(!exists("turnpoint")) turnpoint <- file.path(root_path, "v2", "turnpoint.csv") %>% read.csv(as.is = TRUE)
 
 policy_dic %<>% 
@@ -76,7 +76,7 @@ p_any
 
 fig_dendogram <- ggpubr::ggarrange(p_any, p_max, ncol = 2, common.legend = T, legend = "bottom")
 
-ggsave(filename = file.path(root_path, "figs", "fig2.png"),
+ggsave(filename = here("figs", "fig2.png"),
        plot = fig_dendogram,
        width = 30,
        height = 10)

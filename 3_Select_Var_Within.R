@@ -1,6 +1,6 @@
 ## Initialise
 root_path <- here::here()
-if(!exists("joined")) joined <- file.path(root_path, "v2", "joined_all.RDS") %>% readRDS
+if(!exists("joined")) joined <- here("v2", "joined_all.RDS") %>% readRDS
 policy_raw <- joined$hi %>% 
     colnames %>% 
     str_subset("[A-Z][0-9]") %>%
@@ -38,7 +38,7 @@ bind_rows(`Any effort scenario` = all_lags_low,
           .id = "scenario") %>%
     plot_all_lags
 
-file.path(root_path, "figs", "fig3.png") %>%
+here("figs", "fig3.png") %>%
     ggsave(width = 20, height = 10)
 
 all_lags_low <- calc_all_lags("Low", max_date = "2020-04-15")
@@ -51,7 +51,7 @@ bind_rows(`Any effort scenario` = all_lags_low,
           .id = "scenario") %>%
     plot_all_lags
 
-file.path(root_path, "figs/", "fig3_truncated.png") %>%
+here("figs", "fig3_truncated.png") %>%
     ggsave(width = 20, height = 10)
 
 # already kinda did this, but let's double check
@@ -192,7 +192,7 @@ var_select_res %>%
                                                     size = 3),
                                 nrow = 2)) -> p4
     
-file.path(root_path, "figs/", "fig4.png") %>%
+here("figs", "fig4.png") %>%
     ggsave(width = 15, height = 10, plot = p4)
 
 lapply(1:nrow(chosen), function(i) {
@@ -293,5 +293,5 @@ eff_size %>%
     guides(color = guide_legend(nrow = 2),
            alpha = guide_legend(nrow = 2)) -> p5
 
-file.path(root_path, "figs/", "fig5.png") %>%
+here("figs/", "fig5.png") %>%
     ggsave(width = 40, height = 12, plot = p5)

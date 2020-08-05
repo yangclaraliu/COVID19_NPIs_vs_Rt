@@ -1,5 +1,5 @@
-if(!exists("joined")) joined <- file.path(root_path, "data", "joined_all.RDS") %>% readRDS
-if(!exists("who") | !exists("tags") | !exists("start")) file.path(root_path, "extract_who.R") %>% source
+if(!exists("joined")) joined <- here("data", "joined_all.RDS") %>% readRDS
+if(!exists("who") | !exists("tags") | !exists("start")) here("extract_who.R") %>% source
 start %<>% mutate(tag = "Turning\npoint", tag_date = as.Date("2020-04-13"), rk = paste0(rk,"\n"))
 
 # save_data <- FALSE
