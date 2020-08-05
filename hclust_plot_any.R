@@ -6,13 +6,13 @@ hclust_plot_any <- function(){
                          xend = xend,
                          yend = yend)) +
         geom_point(data = hcd_data[[3]]$labels %>% 
-                       left_join(policy_dic, 
+                       left_join(joined$policy_dic, 
                                  by = c("label" = "policy_code")),
                    aes(x = x,
                        y = y,
                        color = cat)) +
         geom_label(data = hcd_data[[3]]$labels %>% 
-                       left_join(policy_dic, 
+                       left_join(joined$policy_dic, 
                                  by = c("label" = "policy_code")),
                    aes(x = x,
                        y = y,

@@ -14,21 +14,21 @@ pacman::p_load(tidyverse,
                pvclust,
                ggdendro,
                progress,
+               ggsci,
+               gridExtra,
                covidregionaldata)
 
-root_path <- here::here()
-
-# Load data
-oxford_data       <- here("data","oxford_data_2020-07-05.csv") %>% read.csv(as.is = TRUE)
-rt_estimates      <- here("data","rt_estimates_2020-07-05.csv") %>% read.csv 
-UN_household      <- here("data", "un_data_comp_size.rds") %>% readRDS %>% as_tibble
-covid19_pkg_data  <- here("data", "covid19_pkd_data_20200422.rds") %>% readRDS
-urban_rural       <- here("data", "UN_Total_Urban_Rural_2018.csv") %>% read_csv
-
-#Check for missingness
-oxford_data_missing <- oxford_data %>% 
+# recompile the datafile only if it doesn't already exist
+if(!file.exists(here("data","joined_all.RDS"))){
+  oxford_data       <- here("data","oxford_data_2020-07-05.csv") %>% read.csv(as.is = TRUE)
+  rt_estimates      <- here("data","rt_estimates_2020-07-05.csv") %>% read.csv 
+  UN_household      <- here("data", "un_data_comp_size.rds") %>% readRDS %>% as_tibble
+  covid19_pkg_data  <- here("data", "covid19_pkd_data_20200422.rds") %>% readRDS
+  urban_rural       <- here("data", "UN_Total_Urban_Rural_2018.csv") %>% read_csv
+  
+  oxford_data_missing <- oxford_data %>% 
     filter_at(vars(contains("_") & !contains("Flag")), 
-        any_vars(!is.na(.))) %>%
+              any_vars(!is.na(.))) %>%
     mutate(marker = 1) %>%
     pivot_wider(names_from = Date,
                 values_from = marker) %>% 
@@ -36,10 +36,9 @@ oxford_data_missing <- oxford_data %>%
     group_by(Date) %>%
     summarise(value = sum(value, na.rm = T)) %>%
     mutate(Date = ymd(Date))
-
-oxford_data_missing %>%
-    # filter(Date >= "2020-06-05") %>% View()
-    # As of July 7th, things look fine until 2020-06-22
+  
+  oxford_data_missing %>%
+    # As of July 5th, things look fine until 2020-06-22
     ggplot(aes(x = Date, y= value)) +
     geom_line(stat="identity") +
     labs(x = "Date", y = "Number of countries with data") +
@@ -47,12 +46,12 @@ oxford_data_missing %>%
     theme(axis.text = element_text(size = 20),
           axis.title = element_text(size = 26)) +
     geom_vline(xintercept = as.Date("2020-06-22"))
-
-here("figs", "fig_missing.png") %>%
+  
+  here("figs", "fig_missing.png") %>%
     ggsave(width = 20, height = 10)
-
-# Build stringency_data from oxford_data
-oxford_data %>%
+  
+  # Build stringency_data from oxford_data
+  oxford_data %>%
     as_tibble %>%
     mutate(Date = lubridate::ymd(Date)) %>%
     rename(cnt = CountryCode, date = Date, stringency = StringencyIndex) %>%
@@ -67,8 +66,8 @@ oxford_data %>%
     filter(cnt != "GIB") %>% 
     group_by(cnt) %>% 
     mutate(stringency = imputeTS::na_locf(stringency)) -> stringency
-
-stringency %>%
+  
+  stringency %>%
     filter(date <= "2020-06-22") %>% 
     mutate(region = countrycode(cnt, "iso3c","region")) %>%
     filter(!is.na(region)) %>% 
@@ -85,21 +84,21 @@ stringency %>%
          fill = "Region")  +
     theme(axis.text = element_text(size = 20),
           legend.position = "bottom") -> p_stringency
-
-ggsave(filename = "figs/stringency_region.png",
-       plot = p_stringency,
-       width = 15,height = 10)
-
-ggplot2::ggplot_build(p_stringency)$data[[2]] %>% 
+  
+  ggsave(filename = "figs/stringency_region.png",
+         plot = p_stringency,
+         width = 15,height = 10)
+  
+  ggplot2::ggplot_build(p_stringency)$data[[2]] %>% 
     group_by(group) %>% 
     mutate(rk = rank(desc(y))) %>%
     filter(rk == 1) %>% 
     pull(x) -> turnpoint_val
-
-# print the turningpoint identified by GAM by World Bank Region
-# this content is found in supplemental A3
-cbind(turnpoint_val,
-      stringency %>%
+  
+  # print the turningpoint identified by GAM by World Bank Region
+  # this content is found in supplemental A3
+  cbind(turnpoint_val,
+        stringency %>%
           filter(date <= "2020-06-22") %>% 
           mutate(region = countrycode(cnt, "iso3c","region")) %>%
           filter(!is.na(region)) %>% pull(region) %>% table %>% names) %>% 
@@ -109,20 +108,20 @@ cbind(turnpoint_val,
     left_join(seq(lubridate::ymd("2020-01-01"),
                   lubridate::ymd("2020-07-01"),
                   by = "day") %>% 
-                  enframe(., name = "ID", value = "date") %>% 
-                  mutate(date_val = as.numeric(date)),
+                enframe(., name = "ID", value = "date") %>% 
+                mutate(date_val = as.numeric(date)),
               by = c("date" = "date_val"))
-
-seq(lubridate::ymd("2020-01-01"),
-    lubridate::ymd("2020-07-01"),
-    by = "day") %>% 
+  
+  seq(lubridate::ymd("2020-01-01"),
+      lubridate::ymd("2020-07-01"),
+      by = "day") %>% 
     enframe(., name = "ID", value = "date") %>% 
     mutate(date_val = as.numeric(date)) %>%
     
     filter(date_val %in% round(turnpoint_val))
-
-# Build policy_dic, lookup tibble of policy codes and names 
-colnames(oxford_data) %>% 
+  
+  # Build policy_dic, lookup tibble of policy codes and names 
+  policy_dic <- colnames(oxford_data) %>% 
     .[!grepl("_Flag", .)] %>% 
     .[grep(paste(c(paste0("C",1:8),
                    paste0("E",1:4),
@@ -133,10 +132,18 @@ colnames(oxford_data) %>%
     setNames(c("policy_code","policy_name")) %>% 
     mutate(policy_max = c(3, 3, 2, 4, 2, 3, 2, 4,
                           2, 2, NA, NA,
-                          2, 3, 2, NA, NA)) -> policy_dic
-
-# Build policy_data
-oxford_data %>%
+                          2, 3, 2, NA, NA)) %>% 
+    mutate(cat = case_when(policy_code %in% 
+                             paste0("C",1:7) ~ "Closure & Containment  ",
+                           policy_code == "C8" ~ "Intl Travel Restriction  ",
+                           policy_code %in%
+                             paste0("E", 1:4) ~ "Economic Response  ",
+                           policy_code %in%
+                             paste0("H", 1:5) ~ "Public Health & Health System Response  "),
+           lab = gsub("\\.", " ", policy_name))
+  
+  # Build policy_data
+  oxford_data %>%
     as_tibble %>%
     # Make this a long tibble with rows for policy actions and columns for 
     # policy_value and policy_flag
@@ -160,12 +167,12 @@ oxford_data %>%
     # (used for E3, E4, H4, H5 which are listed as $ values)
     group_by(policy_name) %>% 
     mutate(policy_value = if_else(policy_name %in% c("E3","E4","H4","H5") & 
-                                      policy_value > 0, 
+                                    policy_value > 0, 
                                   1, 
                                   policy_value)) -> policy_data
-
-# Impute missing data
-policy_data %>% 
+  
+  # Impute missing data
+  policy_data %>% 
     group_by(cnt, policy_name) %>% 
     arrange(date) %>% 
     nest() %>% 
@@ -173,8 +180,8 @@ policy_data %>%
            all = map(data, ~all(is.na(.x$policy_value))) %>% unlist) %>% 
     group_by(missing) %>% 
     group_split() -> policy_data
-
-policy_data[[2]] %>% 
+  
+  policy_data[[2]] %>% 
     mutate(data = map(data, arrange, date),
            # missingness at the tails are replaced by the last or the next 
            # non-missing values; missingness not at the tails are replaced
@@ -184,9 +191,9 @@ policy_data[[2]] %>%
     bind_rows(policy_data[[1]]) %>% 
     dplyr::select(-c(missing, all)) %>% 
     unnest(cols = data) -> policy_data
-    
-# discretise interventions measured by monetary values
-policy_data %>% 
+  
+  # discretise interventions measured by monetary values
+  policy_data %>% 
     group_by(cnt, policy_name) %>% 
     nest() %>% 
     mutate(change = if_else(policy_name %in% c("E3","E4","H4","H5"),
@@ -194,17 +201,17 @@ policy_data %>%
                             F)) %>% 
     group_by(change) %>% 
     group_split -> policy_data
-
-policy_data[[2]] %>% 
+  
+  policy_data[[2]] %>% 
     mutate(x = map(data, ~cumsum(.x$policy_value))) %>% 
     unnest(cols = c(data, x)) %>% 
     mutate(policy_value = x) %>% 
     dplyr::select(-x) %>%
     bind_rows(policy_data[[1]] %>% 
-                  unnest(cols = data)) -> policy_data
-
-# set maximum and minimum values
-policy_data %>% 
+                unnest(cols = data)) -> policy_data
+  
+  # set maximum and minimum values
+  policy_data %>% 
     group_by(policy_name) %>% 
     summarise(policy_value_max = max(policy_value, na.rm = T)) %>% 
     right_join(policy_data, by = "policy_name") %>% 
@@ -220,45 +227,45 @@ policy_data %>%
            policy_value_lo = if_else(policy_value > 0,
                                      1,
                                      0)) -> policy_data
-
-# Build other data sets
-rt_estimates %<>% 
-  mutate(cnt = countrycode(country, "country.name", "iso3c"),
-         date = lubridate::ymd(date)) %>%
-  as_tibble
-
-hsize <- UN_household[,c(3,4,17)] %>% 
-  setNames(c("cnt","hh_size","multi_gen"))
-
-pop <- covid19_pkg_data %>% 
-  dplyr::select(cnt, 
-                pop_65,
-                pop_density,
-                pop_death_rate) %>% 
-  distinct() %>% 
-  drop_na()
-
-urban <- urban_rural %>% 
-  filter(!is.na(cnt)) %>% 
-  dplyr::select(cnt, Percentage_urban) %>% 
-  rename(urban = Percentage_urban)
-
-# Join datasets for policy_data and rt_estimates into joined_data
-
-# runs much faster if you define cnt_policy_r2 beforehand
-cnt_policy_r2 <- intersect(unique(policy_data$cnt), unique(rt_estimates$cnt)) %>% .[!is.na(.)]
-
-# policy_data %>%
-#     left_join(rt_estimates, by = c("date", "cnt")) %>% 
-#     dplyr::select(-X) %>% 
-# #   inner_join(rt_estimates, by = c("date", "cnt")) %>% 
-#     filter(cnt %in% cnt_policy_r2) %>%
-#     ungroup %>% 
-#     mutate(region = countrycode(cnt, "iso3c", "region", nomatch = NULL)) %>%
-#     filter(!is.na(region)) -> joined_data
-
-# Pivot to wide datasets and set factors
-policy_data %>% 
+  
+  # Build other data sets
+  rt_estimates %<>% 
+    mutate(cnt = countrycode(country, "country.name", "iso3c"),
+           date = lubridate::ymd(date)) %>%
+    as_tibble
+  
+  hsize <- UN_household[,c(3,4,17)] %>% 
+    setNames(c("cnt","hh_size","multi_gen"))
+  
+  pop <- covid19_pkg_data %>% 
+    dplyr::select(cnt, 
+                  pop_65,
+                  pop_density,
+                  pop_death_rate) %>% 
+    distinct() %>% 
+    drop_na()
+  
+  urban <- urban_rural %>% 
+    filter(!is.na(cnt)) %>% 
+    dplyr::select(cnt, Percentage_urban) %>% 
+    rename(urban = Percentage_urban)
+  
+  # Join datasets for policy_data and rt_estimates into joined_data
+  
+  # runs much faster if you define cnt_policy_r2 beforehand
+  cnt_policy_r2 <- intersect(unique(policy_data$cnt), unique(rt_estimates$cnt)) %>% .[!is.na(.)]
+  
+  # policy_data %>%
+  #     left_join(rt_estimates, by = c("date", "cnt")) %>% 
+  #     dplyr::select(-X) %>% 
+  # #   inner_join(rt_estimates, by = c("date", "cnt")) %>% 
+  #     filter(cnt %in% cnt_policy_r2) %>%
+  #     ungroup %>% 
+  #     mutate(region = countrycode(cnt, "iso3c", "region", nomatch = NULL)) %>%
+  #     filter(!is.na(region)) -> joined_data
+  
+  # Pivot to wide datasets and set factors
+  policy_data %>% 
     dplyr::select(-c(policy_flag, 
                      change,
                      policy_value, 
@@ -267,15 +274,15 @@ policy_data %>%
                      policy_value_min)) %>% 
     pivot_wider(names_from = policy_name, values_from = policy_value_hi) %>% 
     mutate_at(vars(policy_dic$policy_code),
-            ~factor(., ordered = T), levels = 0:1) %>% 
+              ~factor(., ordered = T), levels = 0:1) %>% 
     group_by(cnt, date) %>% 
     left_join(rt_estimates %>% 
-                  dplyr::select(-c(X, country)),
+                dplyr::select(-c(X, country)),
               by = c("cnt", "date")) %>% 
     mutate_at(vars(policy_dic$policy_code),
               ~factor(., ordered = T, levels = 0:1)) -> joined_hi
-
-policy_data %>% 
+  
+  policy_data %>% 
     dplyr::select(-c(policy_flag, 
                      change,
                      policy_value, 
@@ -287,12 +294,12 @@ policy_data %>%
               ~factor(., ordered = T), levels = 0:1) %>% 
     group_by(cnt, date) %>% 
     left_join(rt_estimates %>% 
-                  dplyr::select(-c(X, country)),
+                dplyr::select(-c(X, country)),
               by = c("cnt", "date")) %>% 
     mutate_at(vars(policy_dic$policy_code),
               ~factor(., ordered = T, levels = 0:1)) -> joined_lo
-
-policy_data %>% 
+  
+  policy_data %>% 
     dplyr::select(-c(policy_flag, 
                      change,
                      policy_value_max,
@@ -301,7 +308,7 @@ policy_data %>%
                      policy_value_lo)) %>% 
     pivot_wider(names_from = policy_name, values_from = policy_value) %>%
     left_join(rt_estimates %>% 
-                  dplyr::select(-c(X, country)),
+                dplyr::select(-c(X, country)),
               by = c("cnt", "date"))  %>%
     mutate_at(vars(policy_dic$policy_code),
               ~zoo::na.locf(.) %>% round) %>% #
@@ -311,9 +318,9 @@ policy_data %>%
               ~factor(., ordered = T, levels = 0:4))  %>%
     mutate_at(vars(C3, C5, C7, E1, E2, H1, H3),
               ~factor(., ordered = T, levels = 0:2)) -> joined_mid
-
-# joined_data_cov has country-level covariates for random effects model
-covariates <- hsize %>%
+  
+  # joined_data_cov has country-level covariates for random effects model
+  covariates <- hsize %>%
     full_join(pop, by = "cnt") %>% 
     full_join(urban, by = "cnt") %>% 
     drop_na() %>%
@@ -321,27 +328,29 @@ covariates <- hsize %>%
     mutate_at(vars(-cnt), .funs = function(x) ntile(x, 5)) %>%
     mutate_at(vars(hh_size, multi_gen, pop_65, pop_density, pop_death_rate, urban),
               ~factor(., ordered = T))
-
-joined_mid_cov <- covariates %>% 
+  
+  joined_mid_cov <- covariates %>% 
     full_join(joined_mid, by = "cnt") %>%
     drop_na(colnames(covariates))
-
-joined_hi_cov <- covariates %>% 
+  
+  joined_hi_cov <- covariates %>% 
     full_join(joined_hi, by = "cnt") %>%
     drop_na(colnames(covariates))
-
-joined_lo_cov <- covariates %>% 
+  
+  joined_lo_cov <- covariates %>% 
     full_join(joined_lo, by = "cnt") %>%
     drop_na(colnames(covariates))
-
-joined_data_cov <- covariates %>% 
+  
+  joined_data_cov <- covariates %>% 
     full_join(joined_mid, by = "cnt") %>%
     drop_na(colnames(covariates)) %>% 
     left_join(covid19_pkg_data %>% 
-                  select(cnt, date, walking, driving, transit),
+                select(cnt, date, walking, driving, transit),
               by = c("date", "cnt"))
+  
+  saveRDS(list(hi = joined_hi, lo = joined_lo, mid = joined_mid,
+               hi_cov = joined_hi_cov, lo_cov = joined_lo_cov, mid_cov = joined_mid_cov,
+               stringency = stringency, policy_dic = policy_dic), 
+          here("data", "joined_all.RDS"))
+}
 
-saveRDS(list(hi = joined_hi, lo = joined_lo, mid = joined_mid,
-        hi_cov = joined_hi_cov, lo_cov = joined_lo_cov, mid_cov = joined_mid_cov,
-             stringency = stringency, policy_dic = policy_dic), 
-    here("data", "joined_all.RDS"))

@@ -97,37 +97,36 @@ ggsave(filename = "figs/fig1.png",
        height = 10)
 
 # Stringency pot for CHN and SWE
-
-plot_stringency <- function(iso3, country_name){
-    joined$stringency %>% 
-        filter(cnt %in% iso3) %>% 
-        group_by(cnt) %>% 
-        ggplot(aes(x=date,y=stringency)) + 
-        geom_line(size = 0.5,color='darkblue') + 
-        labs(x = "", y = "", title = paste0("Stringency - ",country_name))  + 
-        ylim(0,100) + 
-        xlim(as.Date("2020-01-01"),as.Date("2020-05-31")) +
-        theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
-}
-
-plot_rt <- function(iso3, country_name){
-
-    joined$mid %>% 
-        filter(cnt %in% iso3) %>% 
-        group_by(cnt) %>% 
-        ggplot(aes(date)) +
-        geom_ribbon(aes(ymin=lower_90,ymax=upper_90),fill='lightblue') +
-        geom_line(aes(y=median),color='darkblue') +
-        labs(x = "", y = "", 
-             title = bquote("Median" ~ R[t] ~ " - " ~ .(country_name)))  + 
-        ylim(0,3) + 
-        xlim(as.Date("2020-01-01"),as.Date("2020-05-31")) +
-        theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
-        
-}
-
-sd_CHN <- plot_stringency("CHN", "China")
-sd_SWE <- plot_stringency("SWE", "Sweden")
-rt_CHN <- plot_rt("CHN", "China")
-rt_SWE <- plot_rt("SWE", "Sweden")
-gridExtra::grid.arrange(sd_CHN,sd_SWE,rt_CHN,rt_SWE)
+# plot_stringency <- function(iso3, country_name){
+#     joined$stringency %>% 
+#         filter(cnt %in% iso3) %>% 
+#         group_by(cnt) %>% 
+#         ggplot(aes(x=date,y=stringency)) + 
+#         geom_line(size = 0.5,color='darkblue') + 
+#         labs(x = "", y = "", title = paste0("Stringency - ",country_name))  + 
+#         ylim(0,100) + 
+#         xlim(as.Date("2020-01-01"),as.Date("2020-05-31")) +
+#         theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
+# }
+# 
+# plot_rt <- function(iso3, country_name){
+# 
+#     joined$mid %>% 
+#         filter(cnt %in% iso3) %>% 
+#         group_by(cnt) %>% 
+#         ggplot(aes(date)) +
+#         geom_ribbon(aes(ymin=lower_90,ymax=upper_90),fill='lightblue') +
+#         geom_line(aes(y=median),color='darkblue') +
+#         labs(x = "", y = "", 
+#              title = bquote("Median" ~ R[t] ~ " - " ~ .(country_name)))  + 
+#         ylim(0,3) + 
+#         xlim(as.Date("2020-01-01"),as.Date("2020-05-31")) +
+#         theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
+#         
+# }
+# 
+# sd_CHN <- plot_stringency("CHN", "China")
+# sd_SWE <- plot_stringency("SWE", "Sweden")
+# rt_CHN <- plot_rt("CHN", "China")
+# rt_SWE <- plot_rt("SWE", "Sweden")
+# gridExtra::grid.arrange(sd_CHN,sd_SWE,rt_CHN,rt_SWE)

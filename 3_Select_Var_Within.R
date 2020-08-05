@@ -1,5 +1,4 @@
 ## Initialise
-root_path <- here::here()
 if(!exists("joined")) joined <- here("v2", "joined_all.RDS") %>% readRDS
 policy_raw <- joined$hi %>% 
     colnames %>% 

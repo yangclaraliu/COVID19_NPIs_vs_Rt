@@ -1,14 +1,4 @@
-if(!exists("joined")) joined <- here("v2", "joined_all.RDS") %>% readRDS
-
-policy_dic %<>% 
-    mutate(cat = case_when(policy_code %in% 
-                               paste0("C",1:7) ~ "Closure & Containment  ",
-                           policy_code == "C8" ~ "Intl Travel Restriction  ",
-                           policy_code %in%
-                               paste0("E", 1:4) ~ "Economic Response  ",
-                           policy_code %in%
-                               paste0("H", 1:5) ~ "Public Health & Health System Response  "),
-           lab = gsub("\\.", " ", policy_name))
+if(!exists("joined")) joined <- here("data", "joined_all.RDS") %>% readRDS
 
 policy_raw <- joined$hi %>% 
     colnames %>% 
