@@ -95,6 +95,8 @@ ggplot2::ggplot_build(p_stringency)$data[[2]] %>%
     filter(rk == 1) %>% 
     pull(x) -> turnpoint_val
 
+# print the turningpoint identified by GAM by World Bank Region
+# this content is found in supplemental A3
 cbind(turnpoint_val,
       stringency %>%
           filter(date <= "2020-06-22") %>% 
@@ -117,8 +119,6 @@ seq(lubridate::ymd("2020-01-01"),
     mutate(date_val = as.numeric(date)) %>%
     
     filter(date_val %in% round(turnpoint_val))
-
-median(round(turnpoint_val))
 
 # Build policy_dic, lookup tibble of policy codes and names 
 colnames(oxford_data) %>% 
