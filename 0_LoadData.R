@@ -18,6 +18,11 @@ pacman::p_load(tidyverse,
                gridExtra,
                covidregionaldata)
 
+# custom functions
+source(here("hclust_plot_max.R"))
+source(here("hclust_plot_mid.R"))
+source(here("hclust_plot_any.R"))
+
 # recompile the datafile only if it doesn't already exist
 if(!file.exists(here("data","joined_all.RDS"))){
   oxford_data       <- here("data","oxford_data_2020-07-05.csv") %>% read.csv(as.is = TRUE)

@@ -34,10 +34,6 @@ hcd_raw %>%
 plot(hcd_raw[[3]])
 pvclust::pvrect(hcd[[3]])
 
-source("hclust_plot_max.R")
-source("hclust_plot_mid.R")
-source("hclust_plot_any.R")
-
 sig_boxes <- list()
 sig_boxes[[1]] <- data.frame(xmin = c(1.45, 4.55, 8.45),
                              xmax = c(4.45, 6.5, 13.5),
