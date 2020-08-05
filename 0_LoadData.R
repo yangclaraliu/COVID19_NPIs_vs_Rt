@@ -1,7 +1,16 @@
 rm(list=ls())
 
 # packages and functions
-pacman::p_load(tidyverse, plm, countrycode, magrittr, zoo, ggdendro, cowplot, lubridate)
+pacman::p_load(tidyverse, 
+               plm, 
+               countrycode, 
+               magrittr, 
+               zoo, 
+               ggdendro, 
+               cowplot, 
+               lubridate,
+               data.table,
+               covidregionaldata)
 
 # Get  Rt and policy action data from the web and save to local files if save_data == TRUE
 root_path <- here::here()
@@ -336,8 +345,7 @@ joined_data_cov <- covariates %>%
               by = c("date", "cnt"))
 
 # save
-if(save_data) saveRDS(
-    list(hi = joined_hi, lo = joined_lo, mid = joined_mid,
-         hi_cov = joined_hi_cov, lo_cov = joined_lo_cov, mid_cov = joined_mid_cov,
+saveRDS(list(hi = joined_hi, lo = joined_lo, mid = joined_mid,
+        hi_cov = joined_hi_cov, lo_cov = joined_lo_cov, mid_cov = joined_mid_cov,
              stringency = stringency, policy_dic = policy_dic), 
     file.path(root_path, "data", "joined_all.RDS"))

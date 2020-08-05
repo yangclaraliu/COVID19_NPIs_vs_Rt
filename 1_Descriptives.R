@@ -1,8 +1,3 @@
-root_path <- here::here()
-library(tidyverse)
-library(lubridate)
-library(data.table)
-
 if(!exists("joined")) joined <- file.path(root_path, "data", "joined_all.RDS") %>% readRDS
 if(!exists("who") | !exists("tags") | !exists("start")) file.path(root_path, "extract_who.R") %>% source
 start %<>% mutate(tag = "Turning\npoint", tag_date = as.Date("2020-04-13"), rk = paste0(rk,"\n"))
@@ -10,90 +5,92 @@ start %<>% mutate(tag = "Turning\npoint", tag_date = as.Date("2020-04-13"), rk =
 # save_data <- FALSE
 policy_raw <- joined$policy_dic$policy_code
 bind_rows(`Maximum effort scenario` = joined$hi, 
-                         `Any effort scenario` = joined$lo, .id = "scenario") %>%
-    dplyr::select(date, cnt, scenario, policy_raw) %>%
-    data.table::as.data.table() %>% 
-    data.table::melt(., id.vars = c("cnt", "date","scenario")) %>% 
-    .[, value := as.numeric(as.character(value))] %>% 
-    data.table::dcast(., cnt + date + scenario ~ variable) %>% 
-    .[, ':=' (P1 = if_else(C1 + C2 + C3 + C4 + C5 + C6 + C7> 0, 1, 0),
-              P2 = if_else(C8 >0, 1, 0),
-              P3 = if_else(E1 + E2 + E3 > 0, 1, 0),
-              P4 = if_else(H1 + H2 + H3 + H4 > 0, 1, 0),
-              region = countrycode::countrycode(cnt, 
-                                                origin = "iso3c", 
-                                                destination = "region"))] %>%
-    .[,!..policy_raw] %>% 
-    .[,!"cnt"] %>% 
-    .[, keyby = .(date, region, scenario),
-      .(P1 = sum(P1),
-        P2 = sum(P2),
-        P3 = sum(P3),
-        P4 = sum(P4))] %>% 
-    data.table::melt(., id.vars = c("date", "region", "scenario")) %>% 
-    merge(., start[c("region", "date", "rk")], all.x = T, by = c("date", "region")) -> counts_data
+          `Any effort scenario` = joined$lo, .id = "scenario") %>%
+  dplyr::select(date, cnt, scenario, policy_raw) %>%
+  data.table::as.data.table() %>% 
+  data.table::melt(., id.vars = c("cnt", "date","scenario")) %>% 
+  .[, value := as.numeric(as.character(value))] %>% 
+  data.table::dcast(., cnt + date + scenario ~ variable) %>% 
+  .[, ':=' (P1 = if_else(C1 + C2 + C3 + C4 + C5 + C6 + C7> 0, 1, 0),
+            P2 = if_else(C8 >0, 1, 0),
+            P3 = if_else(E1 + E2 + E3 > 0, 1, 0),
+            P4 = if_else(H1 + H2 + H3 + H4 > 0, 1, 0),
+            region = countrycode::countrycode(cnt, 
+                                              origin = "iso3c", 
+                                              destination = "region"))] %>%
+  .[,!..policy_raw] %>% 
+  .[,!"cnt"] %>% 
+  .[, keyby = .(date, region, scenario),
+    .(P1 = sum(P1),
+      P2 = sum(P2),
+      P3 = sum(P3),
+      P4 = sum(P4))] %>% 
+  data.table::melt(., id.vars = c("date", "region", "scenario")) %>% 
+  merge(., start[c("region", "date", "rk")], all.x = T, by = c("date", "region")) -> counts_data
 
 countrycode::codelist %>% 
-    dplyr::select(iso3c, region, country.name.en) %>% 
-    filter(!is.na(region),
-           !is.na(iso3c)) %>% 
-    group_by(region) %>% 
-    tally() %>% 
-    mutate(lab = paste0("n = ", n)) -> region_count
+  dplyr::select(iso3c, region, country.name.en) %>% 
+  filter(!is.na(region),
+         !is.na(iso3c)) %>% 
+  group_by(region) %>% 
+  tally() %>% 
+  mutate(lab = paste0("n = ", n)) -> region_count
 
 region_count %>% mutate(scenario = "Max. Efforts") %>% 
-    bind_rows(region_count %>% mutate(scenario = "Any Effort")) %>% 
-    mutate(scenario = factor(scenario,levels = c("Max. Efforts", "Any Effort"))) -> region_labs
+  bind_rows(region_count %>% mutate(scenario = "Any Effort")) %>% 
+  mutate(scenario = factor(scenario,levels = c("Max. Efforts", "Any Effort"))) -> region_labs
 
-fig_counts <- counts_data %>%
-    merge(., region_count, all.x = TRUE, by = "region") %>%
-    .[, proportion := value/n] %>% 
-    .[, scenario := factor(scenario,
-                           levels = c("Maximum effort scenario", "Any effort scenario"),
-                           labels = c("Max. Efforts", "Any Effort"))] %>% 
-    .[!is.na(region)] %>% 
-    ggplot(., aes(x = date, 
-                  y = proportion,
-                  group = variable,
-                  color = variable)) +
-    geom_point(alpha = 0.4, size = 2.5) +
-    # stat_smooth(method = "loess", se = FALSE, formula = y~x, span = 1) +
-    facet_grid(scenario ~ region,
-               labeller = label_wrap_gen()) + 
-    xlim(as.Date("2020-01-01"), as.Date("2020-06-22")) + 
-    labs(x = "Date", y = "Proportion of countries in Region with NPI") +
-    # scale_color_brewer(palette = "Pastel",name = "Policy group", 
-    #                    labels = c("Internal\nrestrictions", 
-    #                               "Int'l travel \nrestrictions",
-    #                               "Economic measures",
-    #                               "Health systems\nactions"))+
-    ggsci::scale_color_lancet(name = "Policy group", 
-                              labels = c("Internal\nrestrictions\n",
-                                         "Int'l travel \nrestrictions\n",
-                                         "Economic \nmeasures\n",
-                                         "Health systems\nactions"))+
-    theme_bw()+
-    theme(panel.grid = element_blank(),
-          strip.background = element_rect(NA),
-          axis.text = element_text(size = 20),
-          axis.title = element_text(size = 25),
-          legend.text = element_text(size = 20),
-          legend.title = element_text(size = 20),
-          strip.text = element_text(size = 25))+
-    geom_vline(data = start,
-               aes(xintercept =  Date,
-                   linetype = rk))+
-    geom_vline(data = start,
-               aes(xintercept =  tag_date,
-                   linetype = tag)) +
-    scale_linetype_manual(values = c(1,2), name  = "Epidemic\nprogression") +
-    #lims(y = c(0,1)) +
-    geom_label(data = region_labs,
-              aes(x = as.Date("2020-01-30"),
-                  y = 0.95,
-                  label = lab),
-              inherit.aes = F,
-              size = 8)
+counts_data %>%
+  merge(., region_count, all.x = TRUE, by = "region") %>%
+  .[, proportion := value/n] %>% 
+  .[, scenario := factor(scenario,
+                         levels = c("Maximum effort scenario", "Any effort scenario"),
+                         labels = c("Max. Efforts", "Any Effort"))] %>% 
+  .[!is.na(region)] %>% 
+  ggplot(., aes(x = date, 
+                y = proportion,
+                group = variable,
+                color = variable)) +
+  geom_step(size = 1.2) +
+  # geom_point(alpha = 0.4, size = 2.5) +
+  # stat_smooth(method = "loess", se = FALSE, formula = y~x, span = 1) +
+  facet_grid(scenario ~ region,
+             labeller = label_wrap_gen()) + 
+  xlim(as.Date("2020-01-01"), as.Date("2020-06-22")) + 
+  labs(x = "Date", y = "Proportion of countries in Region with NPI") +
+  # scale_color_brewer(palette = "Pastel",name = "Policy group", 
+  #                    labels = c("Internal\nrestrictions", 
+  #                               "Int'l travel \nrestrictions",
+  #                               "Economic measures",
+  #                               "Health systems\nactions"))+
+  ggsci::scale_color_lancet(name = "Policy group", 
+                            labels = c("Internal\nrestrictions\n",
+                                       "Int'l travel \nrestrictions\n",
+                                       "Economic \nmeasures\n",
+                                       "Health systems\nactions"))+
+  theme_bw()+
+  theme(panel.grid = element_blank(),
+        strip.background = element_rect(NA),
+        axis.text = element_text(size = 20),
+        axis.title = element_text(size = 25),
+        legend.text = element_text(size = 20),
+        legend.title = element_text(size = 20),
+        strip.text = element_text(size = 25),
+        axis.text.x = element_text(angle = 90))+
+  geom_vline(data = start,
+             aes(xintercept =  date,
+                 linetype = rk))+
+  geom_vline(data = start,
+             aes(xintercept =  tag_date,
+                 linetype = tag)) +
+  scale_linetype_manual(values = c(1,2), name  = "Epidemic\nprogression") +
+  #lims(y = c(0,1)) +
+  geom_label(data = region_labs,
+             aes(x = as.Date("2020-01-30"),
+                 y = 0.9,
+                 label = lab),
+             inherit.aes = F,
+             size = 8) -> fig_counts 
 
 ggsave(filename = "figs/fig1.png",
        plot = fig_counts,
