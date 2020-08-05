@@ -68,8 +68,6 @@ expand.grid(scen = c("Low", "Mid", "High"),
             max_date = c(as.Date("2020-04-13"), as.Date("2020-06-22"))) %>% 
     mutate(select = NA) -> res_tab
 
-library(progress)
-
 pb <- progress::progress_bar$new(
     format = "[:bar] :current/:total (:percent in :elapsed) eta: :eta",
     total = nrow(res_tab),

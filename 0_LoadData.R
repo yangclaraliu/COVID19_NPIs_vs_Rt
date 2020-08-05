@@ -11,9 +11,11 @@ pacman::p_load(tidyverse,
                cowplot, 
                lubridate,
                data.table,
+               pvclust,
+               ggdendro,
+               progress,
                covidregionaldata)
 
-# Get  Rt and policy action data from the web and save to local files if save_data == TRUE
 root_path <- here::here()
 
 # Load data
@@ -339,7 +341,6 @@ joined_data_cov <- covariates %>%
                   select(cnt, date, walking, driving, transit),
               by = c("date", "cnt"))
 
-# save
 saveRDS(list(hi = joined_hi, lo = joined_lo, mid = joined_mid,
         hi_cov = joined_hi_cov, lo_cov = joined_lo_cov, mid_cov = joined_mid_cov,
              stringency = stringency, policy_dic = policy_dic), 

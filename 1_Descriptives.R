@@ -2,7 +2,6 @@ if(!exists("joined")) joined <- here("data", "joined_all.RDS") %>% readRDS
 if(!exists("who") | !exists("tags") | !exists("start")) here("extract_who.R") %>% source
 start %<>% mutate(tag = "Turning\npoint", tag_date = as.Date("2020-04-13"), rk = paste0(rk,"\n"))
 
-# save_data <- FALSE
 policy_raw <- joined$policy_dic$policy_code
 bind_rows(`Maximum effort scenario` = joined$hi, 
           `Any effort scenario` = joined$lo, .id = "scenario") %>%

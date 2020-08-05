@@ -1,5 +1,4 @@
 if(!exists("joined")) joined <- here("v2", "joined_all.RDS") %>% readRDS
-# if(!exists("turnpoint")) turnpoint <- file.path(root_path, "v2", "turnpoint.csv") %>% read.csv(as.is = TRUE)
 
 policy_dic %<>% 
     mutate(cat = case_when(policy_code %in% 
@@ -45,8 +44,6 @@ hcd_raw %>%
 plot(hcd_raw[[3]])
 pvclust::pvrect(hcd[[3]])
 
-library(pvclust)
-library(ggdendro)
 source("hclust_plot_max.R")
 source("hclust_plot_mid.R")
 source("hclust_plot_any.R")
