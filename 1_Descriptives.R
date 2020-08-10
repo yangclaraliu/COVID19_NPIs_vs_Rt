@@ -33,11 +33,9 @@ countrycode::codelist %>%
          !is.na(iso3c)) %>% 
   group_by(region) %>% 
   tally() %>% 
-  mutate(lab = paste0("n = ", n)) -> region_count
+  mutate(lab = paste0(region, "\n(n = ", n,")")) -> region_count
 
-region_count %>% mutate(scenario = "Max. Efforts") %>% 
-  bind_rows(region_count %>% mutate(scenario = "Any Effort")) %>% 
-  mutate(scenario = factor(scenario,levels = c("Max. Efforts", "Any Effort"))) -> region_labs
+start %<>% left_join(region_count,by = "region")
 
 counts_data %>%
   merge(., region_count, all.x = TRUE, by = "region") %>%
@@ -51,23 +49,15 @@ counts_data %>%
                 group = variable,
                 color = variable)) +
   geom_step(size = 1.2) +
-  # geom_point(alpha = 0.4, size = 2.5) +
-  # stat_smooth(method = "loess", se = FALSE, formula = y~x, span = 1) +
-  facet_grid(scenario ~ region,
-             labeller = label_wrap_gen()) + 
+  facet_grid(scenario ~ lab) + 
   xlim(as.Date("2020-01-01"), as.Date("2020-06-22")) + 
-  labs(x = "Date", y = "Proportion of countries in Region with NPI") +
-  # scale_color_brewer(palette = "Pastel",name = "Policy group", 
-  #                    labels = c("Internal\nrestrictions", 
-  #                               "Int'l travel \nrestrictions",
-  #                               "Economic measures",
-  #                               "Health systems\nactions"))+
+  labs(x = "", y = "Proportion of countries in Region with NPI") +
   ggsci::scale_color_lancet(name = "Policy group", 
                             labels = c("Internal\nrestrictions\n",
                                        "Int'l travel \nrestrictions\n",
                                        "Economic \nmeasures\n",
                                        "Health systems\nactions"))+
-  theme_bw()+
+  theme_bw() +
   theme(panel.grid = element_blank(),
         strip.background = element_rect(NA),
         axis.text = element_text(size = 20),
@@ -75,25 +65,21 @@ counts_data %>%
         legend.text = element_text(size = 20),
         legend.title = element_text(size = 20),
         strip.text = element_text(size = 25),
+        legend.position = "bottom",
         axis.text.x = element_text(angle = 90))+
   geom_vline(data = start,
              aes(xintercept =  date,
-                 linetype = rk))+
+                 linetype = rk),
+             size = 1.2)+
   geom_vline(data = start,
              aes(xintercept =  tag_date,
-                 linetype = tag)) +
-  scale_linetype_manual(values = c(1,2), name  = "Epidemic\nprogression") +
-  #lims(y = c(0,1)) +
-  geom_label(data = region_labs,
-             aes(x = as.Date("2020-01-30"),
-                 y = 0.9,
-                 label = lab),
-             inherit.aes = F,
-             size = 8) -> fig_counts 
+                 linetype = tag),
+             size = 1.2) +
+  scale_linetype_manual(values = c(3,4), name  = "Epidemic\nprogression")  -> fig_counts 
 
 ggsave(filename = "figs/fig1.png",
        plot = fig_counts,
-       width = 30,
+       width = 33,
        height = 10)
 
 # Stringency pot for CHN and SWE

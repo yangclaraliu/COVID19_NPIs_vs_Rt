@@ -31,9 +31,6 @@ joined %>%
 hcd_raw %>% 
     map(dendro_data) -> hcd_data
 
-plot(hcd_raw[[3]])
-pvclust::pvrect(hcd[[3]])
-
 sig_boxes <- list()
 sig_boxes[[1]] <- data.frame(xmin = c(1.45, 4.55, 8.45),
                              xmax = c(4.45, 6.5, 13.5),
@@ -41,7 +38,6 @@ sig_boxes[[1]] <- data.frame(xmin = c(1.45, 4.55, 8.45),
                              ymax = c(88, 73, 110))
 p_max <- hclust_plot_max()
 p_max
-
 
 sig_boxes[[2]] <- data.frame(xmin = c(0.45, 8.55),
                              xmax = c(8.45, 13.55),
@@ -64,7 +60,7 @@ ggsave(filename = here("figs", "fig2.png"),
        width = 30,
        height = 10)
 
-ggsave(file = "figs/cluster_p_mid.png",
+ggsave(file = here("figs", "cluster_p_mid.png"),
        plot = p_mid,
        width = 20,
        height = 10)

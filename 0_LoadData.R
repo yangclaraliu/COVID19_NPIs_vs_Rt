@@ -12,16 +12,27 @@ pacman::p_load(tidyverse,
                lubridate,
                data.table,
                pvclust,
+               e1071,
                ggdendro,
                progress,
                ggsci,
                gridExtra,
+               ggh4x,
                covidregionaldata)
 
 # custom functions
+# cluster analysis
 source(here("hclust_plot_max.R"))
 source(here("hclust_plot_mid.R"))
 source(here("hclust_plot_any.R"))
+# regression exercise
+source(here("aicbic_plm.R"))
+source(here("gen_reg_data.R"))
+source(here("select_var.R"))
+source(here("find_lag.R"))
+source(here("calc_all_lags.R"))
+source(here("plot_all_lags.R"))
+source(here("aicbic_select.R"))
 
 # recompile the datafile only if it doesn't already exist
 if(!file.exists(here("data","joined_all.RDS"))){

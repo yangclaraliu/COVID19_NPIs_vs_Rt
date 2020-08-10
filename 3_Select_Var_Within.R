@@ -1,25 +1,15 @@
-## Initialise
+# Reload data
 if(!exists("joined")) joined <- here("v2", "joined_all.RDS") %>% readRDS
 policy_raw <- joined$hi %>% 
-    colnames %>% 
-    str_subset("[A-Z][0-9]") %>%
-    str_subset("^(?!.*(E4|H5|M1|E3|H4))") #Q
-# policy_restricted <- c("C1", "E1", "E2", "H1", "H2")
-length(policy_raw)
+  colnames %>% 
+  str_subset("[A-Z][0-9]") %>%
+  .[!.%in% c("M1","E3","E4","H4","H5")]
 
-unique(joined_lo$cnt) %>% 
+# get available data list
+unique(joined$hi$cnt) %>% 
     enframe(value = "cnt") %>% 
     mutate(country_name = countrycode::countrycode(cnt, "iso3c", "country.name"),
            region = countrycode::countrycode(cnt, "iso3c", "region")) -> country_list
-
-# Helper functions to compute AIC and BIC for panel
-source("aicbic_plm.R")
-source("gen_reg_data.R")
-source("select_var.R")
-source("find_lag.R")
-source("calc_all_lags.R")
-source("plot_all_lags.R")
-source("aicbic_select.R")
 
 # generate data frame for panel regression
 regions_dic <- country_list$region %>% unique %>% sort
@@ -35,7 +25,10 @@ bind_rows(`Any effort scenario` = all_lags_low,
           `Multilevel effort scenario` = all_lags_mid, 
           `Maximum effort scenario` = all_lags_hi, 
           .id = "scenario") %>%
-    plot_all_lags
+  filter(scenario != "Multilevel effort scenario") %>% 
+  # pull(scenario) %>% table
+  plot_all_lags +
+  scale_color_nejm()
 
 here("figs", "fig3.png") %>%
     ggsave(width = 20, height = 10)
@@ -108,7 +101,7 @@ chosen[chosen$criterion=="AIC",] %>%
                   pivot_longer(cols = starts_with("X"), names_to = "var")) %>%  
     mutate(var = parse_number(var),
            value = factor(value)) %>% 
-    left_join(policy_dic %>% 
+    left_join(joined$policy_dic %>% 
                   filter(policy_code %in% policy_raw) %>% 
                   mutate(var = 1:n()),
               by = "var") %>% 
@@ -127,7 +120,7 @@ chosen[chosen$criterion=="AIC",] %>%
                              levels = c("2020-04-13",
                                         "2020-06-22"),
                              labels = c("Truncated",
-                                        "Full Timeseries"))) -> var_select_res
+                                        "Full"))) -> var_select_res
 
 var_select_res %>%
     filter(scen != "Multi-level Efforts") %>% 
@@ -138,7 +131,8 @@ var_select_res %>%
                   xmax = lags+0.5,
                   ymax = var+0.5, 
                   fill = value)) +
-    facet_grid(scen ~ max_date + criterion) +
+  # facet_grid(scen ~ max_date + criterion) +
+    ggh4x::facet_nested(scen ~ max_date + criterion) +
     geom_point(aes(x = 1, y = 5, color = cat), alpha = 0) +
     scale_color_manual(values = c('#a6cee3',
                                   '#1f78b4',
@@ -155,8 +149,9 @@ var_select_res %>%
                                    xend = rep(3.5,14)),
                  aes(x = x, xend = xend, y = y, yend = yend)) +
     theme_cowplot() +
+    # theme_bw() +
     scale_y_continuous(breaks = seq(1,13,1),
-                       labels = policy_dic %>% 
+                       labels = joined$policy_dic %>% 
                            filter(policy_code %in% policy_raw) %>% 
                            pull(lab),
                        trans = "reverse") +
@@ -187,7 +182,7 @@ var_select_res %>%
          color = "Intervention Category") +
     guides(color = guide_legend(override.aes = list(alpha = 1,
                                                     size = 3),
-                                nrow = 2)) -> p4
+                                nrow = 2)) #-> p4
     
 here("figs", "fig4.png") %>%
     ggsave(width = 15, height = 10, plot = p4)
@@ -216,7 +211,7 @@ eff_size %>%
 eff_size %>% 
     filter(dim == "L",
            scen != "Mid") %>% 
-    left_join(policy_dic %>% 
+    left_join(joined$policy_dic %>% 
                   filter(policy_code %in% policy_raw) %>% 
                   dplyr::select(policy_code, cat, lab) %>% 
                   mutate(policy_no = 1:n()),
@@ -225,7 +220,7 @@ eff_size %>%
            xend = estimate + 1.96*std.error,
            optim_lag = factor(optim_lag,
                               levels = c(-1, -5, -10),
-                              labels = c("-1 day", "-5 days", "-10 days")),
+                              labels = c("1 day", "5 days", "10 days")),
            max_date = factor(max_date,
                              levels = c("2020-04-13",
                                         "2020-06-22"),
@@ -237,58 +232,52 @@ eff_size %>%
                                     "Multi-level Efforts",
                                     "Max. Efforts")),
            var = factor(var,
-                        labels = policy_dic %>% filter(policy_code %in% policy_raw) %>% pull(lab)),
+                        labels = joined$policy_dic %>% filter(policy_code %in% policy_raw) %>% pull(lab)),
            stat_sig = case_when(x >= 0 ~ "Significantly Positive",
                                 xend <0 ~ "Significantly Negative",
                                 TRUE ~ "Null Effect") %>% 
                factor(., levels = c("Significantly Negative",
                                     "Null Effect",
                                     "Significantly Positive"))) %>% 
+    # filter(var %in% joined$policy_dic$lab[1:7]) %>% 
     ggplot(.) +
-    geom_pointrange(aes(x = max_date,
+    geom_pointrange(aes(x = optim_lag,
                        y = estimate,
                        ymin = x,
                        ymax = xend,
-                       color = interaction(optim_lag, criterion),
+                       # color = interaction(optim_lag, criterion),
+                       color = cat,
                        alpha = stat_sig),
-                    position = position_dodge2(width = 0.5),
-                    size = 1.2) +
+                    # position = position_dodge2(width = 0.5),
+                    size = 0.5) +
     scale_alpha_manual(values = c(1,0.5, 0.2)) +
-    facet_grid(scen ~ var,
-               labeller = label_wrap_gen(width = 15, multi_line = TRUE)) +
-    # geom_point(aes(x = var, 
-    #                y = estimate, 
-    #                color = optim_lag),
-    #            position = position_dodge(0.5)) +
-    # geom_segment(aes(x = var,
-    #                  xend = var,
-    #                  y = x,
-    #                  yend = xend,
-    #                  color = optim_lag),
-    #              position = position_dodge(0.5)) +
-    # facet_grid(scen ~ max_date + criterion) +
+    ggh4x::facet_nested(scen + max_date ~ var + criterion,
+                        labeller = label_wrap_gen(multi_line = T,
+                                                  width = 13)) +
+  scale_color_manual(values = c('#a6cee3',
+                                '#1f78b4',
+                                '#b2df8a',
+                                '#33a02c'))+
     theme_bw()+
     geom_vline(xintercept = 1.5, color = "snow2") +
-    geom_hline(yintercept = 0, color = "snow2") +
+    geom_hline(yintercept = 0, color = "black", linetype = 2) +
     theme(panel.grid = element_blank(),
           legend.position = "bottom",
           legend.title = element_text(size = 20),
           strip.background = element_rect(fill = NA),
-          axis.text.x = element_text(angle = 90,
-                                     vjust = 0.5,
+          axis.text.x = element_text(vjust = 0.5,
+                                     angle = 90,
                                      hjust = 1),
-          axis.text    = element_text(size = 20),
+          axis.text    = element_text(size = 14),
           axis.title = element_text(size = 20),
           legend.text  = element_text(size = 20),
-          strip.text = element_text(size = 20),
-          strip.text.y = element_text(face = "italic")) +
-    ggsci::scale_color_lancet()  +
-    labs(y = "",
-         x = "Effect Size",
+          strip.text = element_text(size = 18)) +
+    labs(y = "Effects",
+         x = "Temporal Lags",
          color = "Model Specification",
          alpha = "Effect Type") +
     guides(color = guide_legend(nrow = 2),
            alpha = guide_legend(nrow = 2)) -> p5
 
 here("figs/", "fig5.png") %>%
-    ggsave(width = 40, height = 12, plot = p5)
+    ggsave(width = 25, height = 10, plot = p5)
