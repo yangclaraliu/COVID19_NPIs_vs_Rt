@@ -25,13 +25,13 @@ bind_rows(`Any effort scenario` = all_lags_low,
           `Multilevel effort scenario` = all_lags_mid, 
           `Maximum effort scenario` = all_lags_hi, 
           .id = "scenario") %>%
-  filter(scenario != "Multilevel effort scenario") %>% 
+  # filter(scenario == "Multilevel effort scenario") %>% 
   # pull(scenario) %>% table
   plot_all_lags +
   scale_color_nejm()
-
-here("figs", "fig3.png") %>%
-    ggsave(width = 20, height = 10)
+ggsave(filename = here("figs", "fig3.png"),
+         width = 20, 
+         height = 10)
 
 all_lags_low <- calc_all_lags("Low", max_date = "2020-04-15")
 all_lags_mid <- calc_all_lags("Mid", max_date = "2020-04-15")
@@ -41,8 +41,8 @@ bind_rows(`Any effort scenario` = all_lags_low,
           `Multilevel effort scenario` = all_lags_mid, 
           `Maximum effort scenario` = all_lags_hi, 
           .id = "scenario") %>%
-    plot_all_lags
-
+    plot_all_lags +
+  scale_color_nejm()
 here("figs", "fig3_truncated.png") %>%
     ggsave(width = 20, height = 10)
 
@@ -210,7 +210,7 @@ eff_size %>%
 
 eff_size %>% 
     filter(dim == "L",
-           scen != "Mid") %>% 
+           scen == "Mid") %>% 
     left_join(joined$policy_dic %>% 
                   filter(policy_code %in% policy_raw) %>% 
                   dplyr::select(policy_code, cat, lab) %>% 
@@ -253,13 +253,13 @@ eff_size %>%
     scale_alpha_manual(values = c(1,0.5, 0.2)) +
     ggh4x::facet_nested(scen + max_date ~ var + criterion,
                         labeller = label_wrap_gen(multi_line = T,
-                                                  width = 13)) +
+                                                  width = 12)) +
   scale_color_manual(values = c('#a6cee3',
                                 '#1f78b4',
                                 '#b2df8a',
                                 '#33a02c'))+
     theme_bw()+
-    geom_vline(xintercept = 1.5, color = "snow2") +
+    # geom_vline(xintercept = 1.5, color = "snow2") +
     geom_hline(yintercept = 0, color = "black", linetype = 2) +
     theme(panel.grid = element_blank(),
           legend.position = "bottom",
@@ -279,5 +279,5 @@ eff_size %>%
     guides(color = guide_legend(nrow = 2),
            alpha = guide_legend(nrow = 2)) -> p5
 
-here("figs/", "fig5.png") %>%
-    ggsave(width = 25, height = 10, plot = p5)
+here("figs/", "fig5_mid.png") %>%
+    ggsave(width = 27, height = 10, plot = p5)
