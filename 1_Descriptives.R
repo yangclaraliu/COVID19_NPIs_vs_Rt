@@ -77,10 +77,10 @@ counts_data %>%
              size = 1.2) +
   scale_linetype_manual(values = c(3,4), name  = "Epidemic\nprogression")  -> fig_counts 
 
-ggsave(filename = "figs/fig1.png",
-       plot = fig_counts,
-       width = 33,
-       height = 10)
+# ggsave(filename = "figs/fig1.png",
+#        plot = fig_counts,
+#        width = 33,
+#        height = 10)
 
 # Stringency pot for CHN and SWE
 # plot_stringency <- function(iso3, country_name){

@@ -55,12 +55,12 @@ p_any
 
 fig_dendogram <- ggpubr::ggarrange(p_any, p_max, ncol = 2, common.legend = T, legend = "bottom")
 
-ggsave(filename = here("figs", "fig2.png"),
-       plot = fig_dendogram,
-       width = 30,
-       height = 10)
-
-ggsave(file = here("figs", "cluster_p_mid.png"),
-       plot = p_mid,
-       width = 20,
-       height = 10)
+# ggsave(filename = here("figs", "fig2.png"),
+#        plot = fig_dendogram,
+#        width = 30,
+#        height = 10)
+# 
+# ggsave(file = here("figs", "cluster_p_mid.png"),
+#        plot = p_mid,
+#        width = 20,
+#        height = 10)

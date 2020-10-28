@@ -1,6 +1,5 @@
 select_var <- function(lag, model_type, criterion, data){
     # initialise
-    
     lags_range = -0:-21
     f_index <- rep(1, length(policy_raw))
     f_lags <- sapply(lags_range, 
@@ -28,11 +27,12 @@ select_var <- function(lag, model_type, criterion, data){
     for(i in 1:length(f_index_tmp)) test_grid[i,remain[i]] <- 0
     
     lapply(1:nrow(test_grid), function(x){
-        paste0("lag(median,", lag, ") ~ ",
-               paste(policy_raw[which(test_grid[x,] == 1)], collapse = " + "))
+      paste0("plm::lag(median,", lag, ") ~ ",
+             paste(policy_raw[which(test_grid[x,] == 1)], collapse = " + "))
     }) %>% 
-        map(as.formula) %>% 
-        map(plm, data = data, model = model_type) -> models_tmp
+      map(as.formula) %>% 
+      map(plm, data = data, model = model_type) -> models_tmp
+    
     stats_tmp <- models_tmp %>% 
         map_dfr(aicbic_plm)
     
@@ -48,7 +48,7 @@ select_var <- function(lag, model_type, criterion, data){
             slice(rep(1,length(remain)))
         for(j in 1:nrow(test_grid)) test_grid[j,remain[j]] <- 0
         lapply(1:nrow(test_grid), function(x){
-            paste0("lag(median,", lag, ") ~ ",
+            paste0("plm::lag(median,", lag, ") ~ ",
                    paste(policy_raw[which(test_grid[x,] == 1)], collapse = " + "))
         }) %>% 
             map(as.formula) %>% 

@@ -1,0 +1,31 @@
+,Country,Region,Average Rank,Average Mean Absolute Error
+1,Mongolia,East Asia & Pacific,2.33,0.35
+2,Zambia,Sub-Saharan Africa,3.21,0.35
+3,Zimbabwe,Sub-Saharan Africa,6.83,0.29
+4,China,East Asia & Pacific,7.67,0.28
+5,Chad,Sub-Saharan Africa,7.75,0.29
+6,Uganda,Sub-Saharan Africa,9.54,0.25
+7,Thailand,East Asia & Pacific,9.58,0.27
+8,South Korea,East Asia & Pacific,11.88,0.25
+9,Niger,Sub-Saharan Africa,12.08,0.26
+10,Palestinian Territories,Middle East & North Africa,13.13,0.23
+11,Djibouti,Middle East & North Africa,15.33,0.27
+12,Sri Lanka,South Asia,15.67,0.22
+13,Iceland,Europe & Central Asia,16.75,0.24
+14,Qatar,Middle East & North Africa,18.54,0.24
+15,South Sudan,Sub-Saharan Africa,19.33,0.22
+16,Australia,East Asia & Pacific,20.21,0.21
+17,Tanzania,Sub-Saharan Africa,21.75,0.21
+18,Israel,Middle East & North Africa,23.75,0.20
+19,Malawi,Sub-Saharan Africa,24.67,0.20
+20,France,Europe & Central Asia,25.96,0.18
+21,Venezuela,Latin America & Caribbean,28.42,0.18
+22,Kuwait,Middle East & North Africa,30.13,0.18
+23,Belarus,Europe & Central Asia,31.38,0.17
+24,Peru,Latin America & Caribbean,32.46,0.17
+25,Benin,Sub-Saharan Africa,32.67,0.18
+26,Cameroon,Sub-Saharan Africa,32.71,0.18
+27,New Zealand,East Asia & Pacific,33.00,0.19
+28,Senegal,Sub-Saharan Africa,33.50,0.17
+29,Bangladesh,South Asia,34.79,0.16
+30,Italy,Europe & Central Asia,35.79,0.17
