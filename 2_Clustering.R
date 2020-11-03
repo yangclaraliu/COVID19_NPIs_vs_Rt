@@ -3,23 +3,32 @@ if(!exists("joined")) joined <- here("data", "joined_all.RDS") %>% readRDS
 policy_raw <- joined$hi %>% 
     colnames %>% 
     str_subset("[A-Z][0-9]") %>%
-    .[!.%in% c("M1","E3","E4","H4","H5")]
+    .[!.%in% c("M1","E3","E4","H4","H5")] # remove NPIs not considered
 
+# [START]
+# this needs to be ran only once, and it may take some time
+# this segment conducts the temporal clustering analyses.
 # joined %>%
 #     .[c("hi","mid","lo")] %>%
 #     map(ungroup) %>%
 #     map(dplyr::select, policy_raw) %>%
 #     map(mutate_all, as.character) %>%
 #     map(mutate_all, as.numeric) %>%
+
+# this specific line below is for calculating the statistical significance of 
+# temporal clusters based on bootstrapping.
+
 #     map(pvclust::pvclust,
 #         method.hclust = "ward.D2",
 #         method.dist = "euclidean",
 #         nboot = 10000) -> hcd
 # 
 # save(hcd, file = "results/hcd.rdata")
+# [END]
 
 load("results/hcd.rdata")
 
+# raw results from temporal clustering
 joined %>% 
     .[c("hi","mid","lo")] %>%
     map(ungroup) %>%
@@ -28,9 +37,11 @@ joined %>%
     map(dist, method = "euclidean") %>% 
     map(hclust, method = "ward.D2") -> hcd_raw
 
+# extract cluster characteristics for the dendrograms
 hcd_raw %>% 
     map(dendro_data) -> hcd_data
 
+# this is the significance boxes - quite manual
 sig_boxes <- list()
 sig_boxes[[1]] <- data.frame(xmin = c(1.45, 4.55, 8.45),
                              xmax = c(4.45, 6.5, 13.5),
