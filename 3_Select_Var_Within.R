@@ -255,13 +255,13 @@ var_select_res %>%
                       labels = c("Variable Excluded","Variable Chosen")) +
     labs(x = "Temporal Lags", 
          y = "", 
-         fill = "Optimal Model", 
+         fill = "", 
          color = "Intervention Category") +
     guides(color = guide_legend(override.aes = list(alpha = 1,
                                                     size = 3),
                                 nrow = 2)) -> p4
     
-here("figs", "fig4.png") %>%
+here("figs", "fig4_v3.png") %>%
     ggsave(width = 16, height = 10, plot = p4)
 
 lapply(1:nrow(chosen), function(i) {
@@ -370,7 +370,6 @@ res_tab[1:3] %>%
   filter(scen != "Mid") %>% 
   pull(index) -> tar
 
-
 chosen_models[tar] %>% 
   map(~.$residuals) %>% 
   map(data.frame) %>% 
@@ -399,6 +398,15 @@ r %>%
   summarise(rank = mean(rank),
             value = mean(value)) %>% 
   arrange(rank) %>% 
-  head(30) %>% 
-  write_csv(path = "results/residuals_rank.csv")
+  tail(30) %>% 
+  write_csv(path = "results/residuals_rank_tail.csv")
 # %>% pull(region) %>% table
+
+r %>% 
+  group_by(country, region) %>% 
+  mutate(rank = as.numeric(rank)) %>% 
+  summarise(rank = mean(rank),
+            value = mean(value)) %>% 
+  arrange(rank) %>% 
+  tail(30) %>% 
+  pull(region) %>% table

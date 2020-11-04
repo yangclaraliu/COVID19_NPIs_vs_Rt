@@ -1,0 +1,31 @@
+Country,Region,Average Rank,Average Mean Absolute Error
+Mali,Sub-Saharan Africa,85.38,0.10
+Gabon,Sub-Saharan Africa,85.50,0.09
+Kenya,Sub-Saharan Africa,85.75,0.10
+Kyrgyzstan,Europe & Central Asia,85.96,0.10
+Belgium,Europe & Central Asia,87.92,0.09
+Oman,Middle East & North Africa,89.54,0.09
+India,South Asia,89.83,0.09
+Pakistan,South Asia,90.17,0.09
+Cote d'Ivoire,Sub-Saharan Africa,90.92,0.09
+Poland,Europe & Central Asia,90.92,0.09
+Netherlands,Europe & Central Asia,91.88,0.09
+Algeria,Middle East & North Africa,92.67,0.09
+Panama,Latin America & Caribbean,92.88,0.09
+Guinea,Sub-Saharan Africa,93.33,0.08
+Cape Verde,Sub-Saharan Africa,94.25,0.10
+Saudi Arabia,Middle East & North Africa,95.88,0.09
+Cuba,Latin America & Caribbean,98.29,0.08
+Puerto Rico,Latin America & Caribbean,98.33,0.09
+Argentina,Latin America & Caribbean,98.88,0.08
+Congo - Kinshasa,Sub-Saharan Africa,99.50,0.08
+Suriname,Latin America & Caribbean,99.75,0.09
+Indonesia,East Asia & Pacific,99.88,0.08
+Brazil,Latin America & Caribbean,101.79,0.08
+Dominican Republic,Latin America & Caribbean,101.96,0.08
+Bolivia,Latin America & Caribbean,102.46,0.08
+Mauritania,Sub-Saharan Africa,110.50,0.09
+Romania,Europe & Central Asia,111.96,0.06
+El Salvador,Latin America & Caribbean,116.46,0.05
+Colombia,Latin America & Caribbean,118.00,0.05
+Namibia,Sub-Saharan Africa,129.92,0.04
